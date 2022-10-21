@@ -1,0 +1,11 @@
+mutation CreateReport($options: ReportInput!) {
+    createReport(options: $options) {
+        errors {
+            field
+            message
+        }
+        report {
+            ...RegularReport
+        }
+    }
+}

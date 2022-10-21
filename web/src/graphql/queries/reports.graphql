@@ -1,0 +1,8 @@
+query Reports {
+    reports {
+        _id
+        createdAt
+        title
+        injured
+    }
+}

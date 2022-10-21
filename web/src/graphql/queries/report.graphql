@@ -1,0 +1,5 @@
+query Report($opt: String!) {
+    report(_id: $opt) {
+        ...RegularReport
+    }
+}

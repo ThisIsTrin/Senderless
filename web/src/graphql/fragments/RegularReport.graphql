@@ -1,0 +1,8 @@
+fragment RegularReport on Report {
+    _id
+    createdAt
+    title
+    description
+    recom
+    injured
+}
