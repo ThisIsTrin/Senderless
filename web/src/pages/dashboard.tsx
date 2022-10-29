@@ -9,6 +9,7 @@ import {
     Stack,
     useToast,
     Text,
+    Button
 } from "@chakra-ui/react";
 import { NavBar } from "../components/NavBar";
 import { useMeQuery, useReportsQuery } from "../generated/graphql";
@@ -85,9 +86,10 @@ const Dashboard: React.FC<{}> = ({}) => {
                                                 as={`/report/${r._id}`}
                                                 passHref
                                             >
-                                                <Flex
+                                                <Button
+                                                    as={Flex}
                                                     key={r._id}
-                                                    p={5}
+                                                    p={10}
                                                     shadow="md"
                                                     borderWidth="1px"
                                                 >
@@ -119,7 +121,7 @@ const Dashboard: React.FC<{}> = ({}) => {
                                                             {r.title}
                                                         </Heading>
                                                     </Box>
-                                                </Flex>
+                                                </Button>
                                             </NextLink>
                                         )
                                     )}
