@@ -1,31 +1,30 @@
-import { Entity, PrimaryKey, Property } from "@mikro-orm/core";
-import { ObjectId } from "@mikro-orm/mongodb";
-import { ObjectType, Field } from "type-graphql";
+import { Field, ObjectType, ID} from "type-graphql";
+import { BaseEntity, Column, CreateDateColumn, Entity, ObjectID, ObjectIdColumn } from "typeorm";
 
 @ObjectType()
 @Entity()
-export class Report {
-    @Field(() => String)
-    @PrimaryKey()
-    _id!: ObjectId;
+export class Report extends BaseEntity {
+    @Field(() => ID)
+    @ObjectIdColumn()
+    _id!: ObjectID;
 
     @Field(() => String)
-    @Property({ type: "date" })
-    createdAt = new Date();
+    @CreateDateColumn()
+    createdAt: Date;
 
     @Field()
-    @Property({ type: "text" })
+    @Column()
     title!: string;
 
     @Field()
-    @Property({ type: "text" })
+    @Column()
     description!: string;
 
     @Field()
-    @Property({ type: "text" })
-    recom!: string;
+    @Column()
+    recom: string;
 
     @Field()
-    @Property({ type: "boolean" })
+    @Column({type: "boolean"})
     injured!: boolean;
 }

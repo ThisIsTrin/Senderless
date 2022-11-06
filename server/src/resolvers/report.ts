@@ -1,17 +1,7 @@
-import { QueryOrder, RequiredEntityData } from "@mikro-orm/core";
+import { datasource } from "..";
 import { Report } from "../entities/Report";
-import { MyContext } from "src/types";
-import {
-    Arg,
-    Ctx,
-    Field,
-    InputType,
-    Mutation,
-    ObjectType,
-    Query,
-    Resolver,
-} from "type-graphql";
-import { ObjectId } from "@mikro-orm/mongodb";
+import { Arg, Field, InputType, Mutation, ObjectType, Query, Resolver } from "type-graphql";
+const ObjectId = require('mongodb').ObjectId;
 
 @InputType()
 class ReportInput {
@@ -46,22 +36,20 @@ class ReportResponse {
 export class ReportResolver {
     // Get all reports
     @Query(() => [Report])
-    reports(@Ctx() { em }: MyContext) {
-        return em.find(Report, {}, { orderBy: { createdAt: QueryOrder.DESC } });
+    reports():Promise<Report[]> {
+        return datasource.getRepository(Report).find();
     }
 
     // Get report by id
     @Query(() => Report, { nullable: true })
-    report(@Arg("_id", () => String) _id: ObjectId, @Ctx() { em }: MyContext) {
-        return em.findOne(Report, { _id });
+    async report(@Arg("_id", () => String) reportId: string):Promise<Report | null> {
+        return await Report.findOne({ where: {_id: new ObjectId(reportId)} });;
     }
 
     // Create report
     @Mutation(() => ReportResponse)
     async createReport(
         @Arg("options") options: ReportInput,
-        @Ctx()
-        { em }: MyContext
     ): Promise<ReportResponse> {
         if (!options.title.replace(/\s/g, "").length) {
             return {
@@ -82,13 +70,12 @@ export class ReportResolver {
                 ],
             };
         } else {
-            const report = em.create(Report, {
+            const report = await datasource.getRepository(Report).create({
                 title: options.title,
                 description: options.description,
                 recom: options.recom,
                 injured: options.injured,
-            } as RequiredEntityData<Report>);
-            await em.persistAndFlush(report);
+             }).save();
             return { report };
         }
     }

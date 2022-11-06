@@ -1,16 +1,16 @@
-import { EntityManager, IDatabaseDriver, Connection } from "@mikro-orm/core";
-import { ObjectId } from "@mikro-orm/mongodb";
+import { ObjectID } from "typeorm";
 import { Request, Response } from "express";
 import { Session } from "express-session";
+import { Redis } from "ioredis";
 
 declare module "express-session" {
-    interface Session {
-        userId: ObjectId;
-    }
+  interface Session {
+    userId: ObjectID;
+  }
 }
 
 export type MyContext = {
-    em: EntityManager<IDatabaseDriver<Connection>>;
     req: Request & { session: Session };
+    redis: Redis;
     res: Response;
 };

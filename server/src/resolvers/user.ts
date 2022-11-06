@@ -11,8 +11,9 @@ import {
     Resolver,
 } from "type-graphql";
 import argon2 from "argon2";
-import { RequiredEntityData } from "@mikro-orm/core";
 import { COOKIE_NAME } from "../constants";
+import { datasource } from "../index";
+const ObjectId = require('mongodb').ObjectId;
 
 @InputType()
 class UsernamePasswordInput {
@@ -43,11 +44,11 @@ class UserResponse {
 export class UserResolver {
     // Get User
     @Query(() => User, { nullable: true })
-    me(@Ctx() { em, req }: MyContext) {
+    async me(@Ctx() { req }: MyContext) {
         if (!req.session.userId) {
             return null;
         }
-        const user = em.findOne(User, { _id: req.session.userId });
+        const user = await User.findOne({ where: {_id: new ObjectId(req.session.userId)}});
         return user;
     }
 
@@ -55,8 +56,8 @@ export class UserResolver {
     @Mutation(() => UserResponse)
     async register(
         @Arg("options") options: UsernamePasswordInput,
-        @Ctx() { em, req }: MyContext
-    ): Promise<UserResponse> {
+        @Ctx() { req } : MyContext
+    ) {
         if (options.username.length <= 2) {
             return {
                 errors: [
@@ -79,12 +80,12 @@ export class UserResolver {
             };
         }
         const hashedPassword = await argon2.hash(options.password);
-        const user = em.create(User, {
-            username: options.username,
-            passowrd: hashedPassword,
-        } as RequiredEntityData<User>);
+        let user;
         try {
-            await em.persistAndFlush(user);
+            user = await datasource.getRepository(User).create({
+                 username: options.username,
+                 password: hashedPassword
+             }).save();
         } catch (err) {
             if (err.code == "11000") {
                 return {
@@ -98,7 +99,9 @@ export class UserResolver {
             }
         }
 
-        req.session.userId = user._id;
+        if (user){
+            req.session.userId = user._id;
+        }
 
         return {
             user,
@@ -109,9 +112,9 @@ export class UserResolver {
     @Mutation(() => UserResponse)
     async login(
         @Arg("options") options: UsernamePasswordInput,
-        @Ctx() { em, req }: MyContext
+        @Ctx() { req }: MyContext
     ): Promise<UserResponse> {
-        const user = await em.findOne(User, { username: options.username });
+        const user = await datasource.getRepository(User).findOneBy({username: options.username});
         if (!user) {
             return {
                 errors: [
@@ -122,7 +125,7 @@ export class UserResolver {
                 ],
             };
         }
-        const valid = await argon2.verify(user.passowrd, options.password);
+        const valid = await argon2.verify(user.password, options.password);
         if (!valid) {
             return {
                 errors: [
